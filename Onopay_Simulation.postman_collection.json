@@ -1,0 +1,70 @@
+{
+	"info": {
+		"_postman_id": "c1f7a0c1-3f1b-4b11-9a70-8b1e1b1a1c1d",
+		"name": "Onopay Integration Simulation",
+		"description": "Koleksi Postman untuk mensimulasikan integrasi API Onopay yang digunakan pada aplikasi Martip.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Generate QR Payment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "phone_number",
+							"value": "089690260334",
+							"description": "Nomor handphone customer",
+							"type": "text"
+						},
+						{
+							"key": "amount",
+							"value": "35000",
+							"description": "Nominal pembayaran",
+							"type": "text"
+						},
+						{
+							"key": "merchant_code",
+							"value": "MARTIP Pusat",
+							"description": "Kode atau nama merchant",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "Titip Barang INV-20231010-001",
+							"description": "Deskripsi transaksi",
+							"type": "text"
+						},
+						{
+							"key": "qr_mode",
+							"value": "single_use",
+							"description": "Tipe QR (single_use / dynamic)",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://onopay.web.id/api/v1/payment/qr/generate",
+					"protocol": "http",
+					"host": [
+						"onopay",
+						"web",
+						"id"
+					],
+					"path": [
+						"api",
+						"v1",
+						"payment",
+						"qr",
+						"generate"
+					]
+				},
+				"description": "Endpoint ini digunakan untuk meng-generate QR Code pembayaran dari Onopay sesuai dengan request yang ada di PaymentController Martip."
+			},
+			"response": []
+		}
+	]
+}
