@@ -16,9 +16,9 @@
         <div class="flex-1 space-y-6">
             <div class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm">
                 @if($lokasi->image)
-                    <img src="{{ Storage::url($lokasi->image) }}" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
+                    <img src="{{ asset('storage/' . $lokasi->image) }}" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
                 @else
-                    <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
+                    <img src="" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
                 @endif
                 <div class="p-8">
                     <div class="flex justify-between items-start mb-4">
@@ -66,7 +66,7 @@
 
                 <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100 mb-8 flex justify-between items-center">
                     <span class="font-bold text-blue-800">Tarif Standar</span>
-                    <span class="text-2xl font-black text-blue-600">Rp 5.000<span class="text-sm text-blue-500 font-normal">/hari</span></span>
+                    <span class="text-2xl font-black text-blue-600">Rp {{ number_format($lokasi->tarif_per_hari, 0, ',', '.') }}<span class="text-sm text-blue-500 font-normal">/hari</span></span>
                 </div>
 
                 <div class="space-y-4 mb-8">

@@ -62,7 +62,7 @@ class OnopayService
     {
         try {
             $url = $this->baseUrl . $endpoint;
-            $response = Http::withHeaders([
+            $response = Http::asForm()->withHeaders([
                 'Accept' => 'application/json',
             ])->$method($url, $data);
 

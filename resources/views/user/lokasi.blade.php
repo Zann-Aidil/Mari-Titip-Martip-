@@ -36,7 +36,7 @@
         <div class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
             <div class="relative h-48 overflow-hidden">
                 @if($lokasi->image)
-                    <img src="{{ Storage::url($lokasi->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <img src="{{ asset('storage/' . $lokasi->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 @else
                     <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Lokasi" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 @endif

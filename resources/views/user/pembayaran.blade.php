@@ -128,7 +128,7 @@
                     </div>
 
                     <!-- Vue Onopay Button Component -->
-                    <onopay-payment-form :amount="{{ $deposit->total_biaya }}" track-id="{{ $deposit->tracking_code }}"></onopay-payment-form>
+                    <onopay-payment-form :amount="{{ $deposit->total_biaya }}" track-id="{{ $deposit->tracking_code }}" :deposit-id="{{ $deposit->id }}" user-phone="{{ Auth::user()->phone ?? '089690260334' }}"></onopay-payment-form>
                 </div>
             </div>
             

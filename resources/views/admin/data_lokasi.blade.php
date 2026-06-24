@@ -72,7 +72,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 @if($lokasi->image)
-                                    <img src="{{ Storage::url($lokasi->image) }}" class="w-8 h-8 rounded-lg object-cover">
+                                    <img src="{{ asset('storage/' . $lokasi->image) }}" class="w-8 h-8 rounded-lg object-cover">
                                 @else
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500"><i class='bx bx-store-alt'></i></div>
                                 @endif

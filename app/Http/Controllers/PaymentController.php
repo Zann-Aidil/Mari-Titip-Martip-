@@ -66,7 +66,10 @@ class PaymentController extends Controller
         // 4. Sistem Fallback QR Code
         // Jika API Onopay gagal diakses/unauthorized, buat QR dari API Publik agar UI tetap sama dengan mockup
         if (!$qrUrl) {
-            $qrData = "MARTIP-PAY-" . $transactionId . "-AMT-" . $amount;
+            $qrData = json_encode([
+                'tracking_code' => $transactionId,
+                'invoice_id' => $deposit->id
+            ]);
             $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" . urlencode($qrData);
             
             $deposit->update([
@@ -100,5 +103,78 @@ class PaymentController extends Controller
         $transactionId = session('transaction_id', $deposit ? $deposit->tracking_code : 'INV-' . date('Ymd') . '-001');
 
         return view('user.qr_ambil', compact('qrUrl', 'transactionId', 'deposit'));
+    }
+
+    public function checkStatus($trackId)
+    {
+        $deposit = \App\Models\Deposit::where('tracking_code', $trackId)->first();
+        
+        if (!$deposit) {
+            return response()->json(['status' => 'error', 'message' => 'Deposit not found'], 404);
+        }
+
+        return response()->json([
+            'status' => strtolower($deposit->payment_status) // misalnya 'paid' atau 'pending'
+        ]);
+    }
+
+    public function mobilePay(Request $request)
+    {
+        $request->validate([
+            'tracking_code' => 'required|string',
+            'qr_code' => 'nullable|string',
+            'payer_phone' => 'nullable|string',
+        ]);
+
+        $deposit = \App\Models\Deposit::where('tracking_code', $request->tracking_code)->first();
+
+        if (!$deposit) {
+            return response()->json(['success' => false, 'message' => 'Deposit not found'], 404);
+        }
+
+        // Teruskan ke API Onopay agar transaksi tercatat real-time di dashboard Onopay
+        if ($request->qr_code) {
+            $onopay = new \App\Services\OnopayService();
+            // Gunakan phone dari app mobile, jika kosong (simulasi web) pakai dummy
+            $payerPhone = $request->payer_phone ?? '089690260334'; 
+            
+            $response = $onopay->pay($request->qr_code, $payerPhone);
+            
+            if (isset($response['success']) && $response['success']) {
+                // Simpan juga ke database lokal untuk histori Onopay
+                \App\Models\OnopayTransaction::create([
+                    'transaction_id' => $response['data']['transaction_id'] ?? null,
+                    'amount' => $deposit->total_biaya,
+                    'payer_phone' => $payerPhone,
+                    'receiver_phone' => '08123456789', // System receiver
+                    'status' => 'success',
+                    'qr_code' => $request->qr_code,
+                    'type' => 'qr_payment'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal memproses pembayaran di server Onopay: ' . ($response['message'] ?? '')
+                ], 400);
+            }
+        }
+
+        $deposit->update([
+            'payment_status' => 'paid',
+            'status' => 'pending'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment successful',
+            'data' => [
+                'receipt_no' => $deposit->tracking_code,
+                'amount' => $deposit->total_biaya,
+                'date' => now()->format('Y-m-d H:i:s'),
+                'item_name' => $deposit->nama_barang,
+                'merchant' => 'MARTIP ' . ($deposit->location->nama_lokasi ?? 'Pusat'),
+                'status' => 'LUNAS'
+            ]
+        ]);
     }
 }

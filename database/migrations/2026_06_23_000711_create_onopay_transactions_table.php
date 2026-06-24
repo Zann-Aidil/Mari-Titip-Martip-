@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('receiver_new_balance', 12, 0)->nullable();
             $table->string('description')->nullable();
             $table->string('merchant_code')->nullable();
+            $table->string('type')->default('qr_payment');
             $table->json('response_data')->nullable(); // Simpan response dari API
             $table->timestamps();
             

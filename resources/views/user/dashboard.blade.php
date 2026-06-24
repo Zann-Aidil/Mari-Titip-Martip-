@@ -119,7 +119,7 @@
                 @forelse($locations as $lokasi)
                 <div onclick="window.location.href='{{ route('user.lokasi.detail', $lokasi->id) }}'" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
                     @if($lokasi->image)
-                        <img src="{{ Storage::url($lokasi->image) }}" class="w-20 h-16 rounded-xl object-cover">
+                        <img src="{{ asset('storage/' . $lokasi->image) }}" class="w-20 h-16 rounded-xl object-cover">
                     @else
                         <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" class="w-20 h-16 rounded-xl object-cover">
                     @endif
@@ -128,7 +128,7 @@
                         <p class="text-[11px] text-gray-500 mt-0.5"><i class='bx bx-map'></i> {{ $lokasi->alamat }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-[10px] font-bold text-green-600 mt-1">Rp 5.000 / hari</p>
+                        <p class="text-[10px] font-bold text-green-600 mt-1">Rp {{ number_format($lokasi->tarif_per_hari, 0, ',', '.') }} / hari</p>
                     </div>
                 </div>
                 @empty

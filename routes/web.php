@@ -28,6 +28,7 @@ Route::get('/kontak', [PublicController::class, 'kontak'])->name('kontak');
 
 // Public API Routes
 Route::get('/api/search-lokasi', [PublicController::class, 'searchApi'])->name('api.search.lokasi');
+Route::post('/api/mobile/pay', [PaymentController::class, 'mobilePay'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Auth Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -46,11 +47,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/tracking/{id?}', [UserController::class, 'tracking'])->name('user.tracking');
     Route::get('/user/riwayat', [UserController::class, 'riwayat'])->name('user.riwayat');
     Route::get('/user/profil', [UserController::class, 'profil'])->name('user.profil');
+    Route::put('/user/profil', [UserController::class, 'updateProfil'])->name('user.profil.update');
 
     // Payment & QR Routes
     Route::get('/user/pembayaran', [PaymentController::class, 'pembayaran'])->name('user.pembayaran');
     Route::post('/user/bayar', [PaymentController::class, 'bayar'])->name('user.bayar');
     Route::get('/user/qr-ambil', [PaymentController::class, 'qrAmbil'])->name('user.qr_ambil');
+    Route::get('/api/payment/status/{trackId}', [PaymentController::class, 'checkStatus']);
 });
 
 // Admin Area Routes (Requires Authentication + Admin Role)

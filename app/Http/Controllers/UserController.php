@@ -94,4 +94,22 @@ class UserController extends Controller
         return view('user.riwayat', compact('deposits')); 
     }
     public function profil() { return view('user.profil'); }
+
+    public function updateProfil(Request $request) {
+        $user = auth()->user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'required|string|max:20',
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return back()->with('success', 'Profil berhasil diperbarui!');
+    }
 }

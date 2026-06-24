@@ -144,7 +144,7 @@
                 <!-- QR Code Box -->
                 <div class="inline-block p-4 border-2 border-blue-100 rounded-2xl mb-6 shadow-sm">
                     <!-- Menggunakan Image dari Response API Onopay / Fallback -->
-                    <img src="{{ $qrUrl }}" alt="QR Code" class="w-48 h-48 mx-auto" onerror="this.onerror=null;this.src='https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={{ $transactionId }}';">
+                    <img src="{{ $qrUrl }}" alt="QR Code" class="w-48 h-48 mx-auto" onerror="this.onerror=null;this.src='https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={{ urlencode(json_encode(['tracking_code' => $transactionId, 'invoice_id' => $deposit->id ?? ''])) }}';">
                 </div>
                 
                 <p class="text-[11px] text-gray-500 mb-1">ID Titipan</p>
