@@ -84,12 +84,12 @@
 
                 <!-- Metode Pembayaran -->
                 <div>
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Metode Pembayaran (E-Wallet)</h2>
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Metode Pembayaran (QR Code OnoPay)</h2>
                     
                     <!-- Info Alert -->
                     <div class="mb-6 bg-blue-50 text-blue-700 p-4 rounded-xl text-xs flex items-center gap-2">
                         <i class='bx bx-info-circle text-lg'></i>
-                        Silakan cek ringkasan pembayaran di sebelah kanan, dan klik "Bayar Sekarang" untuk memproses via OnoPay.
+                        Silakan cek ringkasan pembayaran di sebelah kanan, dan klik "Bayar Sekarang" untuk memproses via QR Code OnoPay.
                     </div>
                 </div>
 
