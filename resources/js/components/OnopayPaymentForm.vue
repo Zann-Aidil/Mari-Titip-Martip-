@@ -13,91 +13,99 @@
       {{ error }}
     </div>
 
-    <!-- Modal Overlay -->
-    <div v-if="step > 1" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+    <!-- Modal Overlay with Fade Transition -->
+    <Transition name="modal-backdrop">
+      <div v-if="step > 1" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" @click.self="closeModal">
         
-        <!-- Step 2: QR Code Payment (Match Screenshot Design) -->
-        <div v-if="step === 2" class="text-center">
-          <!-- Blue Header (Double click for simulation) -->
-          <div @dblclick="simulatePayment" class="bg-blue-600 text-white py-4 px-6 rounded-t-2xl font-bold text-lg shadow-sm cursor-pointer select-none">
-            Metode Pembayaran
-          </div>
-          
-          <div class="p-8">
-            <!-- Logos -->
-            <div class="flex justify-center items-center gap-3 mb-2">
-              <div class="text-blue-600 font-black text-3xl tracking-tighter flex flex-col leading-none items-center">
-                <div class="flex gap-1"><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span></div>
-                <div class="flex gap-1 mt-1"><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span></div>
+        <!-- Modal Content with Scale + Fade Transition -->
+        <Transition name="modal-content" appear>
+          <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+            
+            <!-- Step 2: QR Code Payment -->
+            <Transition name="step-fade" mode="out-in">
+              <div v-if="step === 2" key="step-qr" class="text-center">
+                <!-- Blue Header (Double click for simulation) -->
+                <div @dblclick="simulatePayment" class="bg-blue-600 text-white py-4 px-6 rounded-t-2xl font-bold text-lg shadow-sm cursor-pointer select-none">
+                  Metode Pembayaran
+                </div>
+                
+                <div class="p-8">
+                  <!-- Logos -->
+                  <div class="flex justify-center items-center gap-3 mb-2">
+                    <div class="text-blue-600 font-black text-3xl tracking-tighter flex flex-col leading-none items-center">
+                      <div class="flex gap-1"><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span></div>
+                      <div class="flex gap-1 mt-1"><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span><span class="w-3.5 h-3.5 bg-blue-600 rounded-sm"></span></div>
+                    </div>
+                    <div class="text-blue-800 font-black text-3xl tracking-tight">
+                      OnoPay<span class="text-blue-500 font-bold italic ml-1">QR</span>
+                    </div>
+                  </div>
+                  
+                  <p class="text-sm text-gray-500 mb-6">Scan QR Code untuk membayar</p>
+                  
+                  <!-- Total Tagihan Box -->
+                  <div class="bg-blue-50 border border-blue-100 py-3 px-4 rounded-xl mb-6 flex justify-center items-center shadow-inner">
+                    <span class="font-bold text-blue-900 text-lg">Total Tagihan: <span class="font-bold text-blue-600">Rp {{ formatNumber(amount) }}</span></span>
+                  </div>
+                  
+                  <!-- QR Code -->
+                  <div class="qr-image flex justify-center mb-8 relative">
+                    <div class="absolute inset-0 bg-blue-100 rounded-2xl blur-md opacity-50 transform scale-105"></div>
+                    <img :src="qrData.qr_image" alt="QR Code" class="w-64 h-64 border-4 border-white shadow-lg rounded-2xl relative z-10" />
+                  </div>
+
+                  <!-- Buttons -->
+                  <div class="flex flex-col gap-3 mt-4">
+                    <!-- Tombol Simulasi Pembayaran disembunyikan (Bisa di-trigger dengan double-click di header 'Metode Pembayaran') -->
+                    <a :href="'/user/pembayaran?deposit_id=' + depositId" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-blue-200">
+                      <i class='bx bx-upload text-lg'></i> Upload Bukti Pembayaran
+                    </a>
+                    <!-- Kembali ke Riwayat -->
+                    <button type="button" @click="closeModal" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+                      <i class='bx bx-arrow-back text-lg'></i> Kembali ke Riwayat
+                    </button>
+
+                    <!-- Tombol Simulasi Pembayaran (Disamarkan sebagai versi aplikasi) -->
+                    <button type="button" @click="simulatePayment" title="Klik untuk simulasi sukses" class="w-full text-center mt-2 text-xs font-semibold tracking-widest text-gray-300 hover:text-gray-400 cursor-pointer">
+                      MARTIP v1.0.0
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="text-blue-800 font-black text-3xl tracking-tight">
-                OnoPay<span class="text-blue-500 font-bold italic ml-1">QR</span>
+
+              <!-- Step 4: Success / Receipt -->
+              <div v-else-if="step === 4" key="step-success" class="step-success printable-receipt p-6">
+                <div class="text-center mb-6">
+                  <div class="success-icon-bounce w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class='bx bx-check text-4xl'></i>
+                  </div>
+                  <h2 class="text-2xl font-bold text-gray-900">Transaksi Sukses</h2>
+                  <p class="text-gray-500 text-sm">Tunggu Admin Kami Merespon</p>
+                </div>
+                
+                <div class="transaction-details bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm space-y-2">
+                  <h3 class="font-bold mb-3 border-b pb-2 text-center text-gray-800">STRUK TRANSAKSI</h3>
+                  <div class="flex justify-between"><span class="text-gray-500">ID Titipan</span> <span class="font-medium">{{ trackId }}</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">Jumlah</span> <span class="font-bold text-green-600">Rp {{ formatNumber(amount) }}</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">Waktu</span> <span class="font-medium">{{ new Date().toLocaleString('id-ID') }}</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">Status</span> <span class="font-bold text-green-600">LUNAS</span></div>
+                </div>
+
+                <div class="mt-8 flex gap-3 no-print">
+                  <button type="button" @click="printReceipt" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                    <i class='bx bx-printer'></i> Cetak Struk
+                  </button>
+                  <button type="button" @click="finish" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+                    Selesai
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <p class="text-sm text-gray-500 mb-6">Scan QR Code untuk membayar</p>
-            
-            <!-- Total Tagihan Box -->
-            <div class="bg-blue-50 border border-blue-100 py-3 px-4 rounded-xl mb-6 flex justify-center items-center shadow-inner">
-              <span class="font-bold text-blue-900 text-lg">Total Tagihan: <span class="font-bold text-blue-600">Rp {{ formatNumber(amount) }}</span></span>
-            </div>
-            
-            <!-- QR Code -->
-            <div class="qr-image flex justify-center mb-8 relative">
-              <div class="absolute inset-0 bg-blue-100 rounded-2xl blur-md opacity-50 transform scale-105"></div>
-              <img :src="qrData.qr_image" alt="QR Code" class="w-64 h-64 border-4 border-white shadow-lg rounded-2xl relative z-10" />
-            </div>
+            </Transition>
 
-            <!-- Buttons -->
-            <div class="flex flex-col gap-3 mt-4">
-              <!-- Tombol Simulasi Pembayaran disembunyikan (Bisa di-trigger dengan double-click di header 'Metode Pembayaran') -->
-              <a :href="'/user/pembayaran?deposit_id=' + depositId" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-blue-200">
-                <i class='bx bx-upload text-lg'></i> Upload Bukti Pembayaran
-              </a>
-              <!-- Kembali ke Riwayat -->
-              <button type="button" @click="closeModal" class="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-                <i class='bx bx-arrow-back text-lg'></i> Kembali ke Riwayat
-              </button>
-
-              <!-- Tombol Simulasi Pembayaran (Disamarkan sebagai versi aplikasi) -->
-              <button type="button" @click="simulatePayment" title="Klik untuk simulasi sukses" class="w-full text-center mt-2 text-xs font-semibold tracking-widest text-gray-300 hover:text-gray-400 cursor-pointer">
-                MARTIP v1.0.0
-              </button>
-            </div>
           </div>
-        </div>
-
-        <!-- Step 4: Success / Receipt -->
-        <div v-if="step === 4" class="step-success printable-receipt p-6">
-          <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-              <i class='bx bx-check text-4xl'></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900">Transaksi Sukses</h2>
-            <p class="text-gray-500 text-sm">Tunggu Admin Kami Merespon</p>
-          </div>
-          
-          <div class="transaction-details bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm space-y-2">
-            <h3 class="font-bold mb-3 border-b pb-2 text-center text-gray-800">STRUK TRANSAKSI</h3>
-            <div class="flex justify-between"><span class="text-gray-500">ID Titipan</span> <span class="font-medium">{{ trackId }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Jumlah</span> <span class="font-bold text-green-600">Rp {{ formatNumber(amount) }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Waktu</span> <span class="font-medium">{{ new Date().toLocaleString('id-ID') }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Status</span> <span class="font-bold text-green-600">LUNAS</span></div>
-          </div>
-
-          <div class="mt-8 flex gap-3 no-print">
-            <button type="button" @click="printReceipt" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
-              <i class='bx bx-printer'></i> Cetak Struk
-            </button>
-            <button type="button" @click="finish" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
-              Selesai
-            </button>
-          </div>
-        </div>
-
+        </Transition>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -256,12 +264,87 @@ export default {
       return new Intl.NumberFormat('id-ID').format(num);
     }
   },
+  mounted() {
+    this._handleKeydown = (e) => {
+      // Saat modal QR terbuka (step 2), tekan Enter = simulasi pembayaran sukses
+      if (e.key === 'Enter' && this.step === 2) {
+        e.preventDefault();
+        this.simulatePayment();
+      }
+    };
+    document.addEventListener('keydown', this._handleKeydown);
+  },
   beforeUnmount() {
     this.stopPolling();
+    if (this._handleKeydown) {
+      document.removeEventListener('keydown', this._handleKeydown);
+    }
   }
 };
 </script>
 
 <style scoped>
-/* Scoped styles if needed */
+/* === Modal Backdrop: Fade === */
+.modal-backdrop-enter-active,
+.modal-backdrop-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-backdrop-enter-from,
+.modal-backdrop-leave-to {
+  opacity: 0;
+}
+
+/* === Modal Content: Fade + Scale === */
+.modal-content-enter-active {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal-content-leave-active {
+  transition: all 0.25s ease-in;
+}
+.modal-content-enter-from {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+}
+.modal-content-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+/* === Step Crossfade (QR ↔ Success) === */
+.step-fade-enter-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.step-fade-leave-active {
+  transition: all 0.2s ease-in;
+}
+.step-fade-enter-from {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.step-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* === Success Icon Bounce === */
+.success-icon-bounce {
+  animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 </style>

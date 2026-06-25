@@ -38,7 +38,7 @@
                 @if($lokasi->image)
                     <img src="{{ asset('storage/' . $lokasi->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 @else
-                    <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Lokasi" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <img src="{{ $lokasi->image_url }}" alt="Lokasi" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 @endif
                 <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-blue-600 shadow-sm">
                     Tersedia

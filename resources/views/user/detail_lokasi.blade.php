@@ -18,7 +18,7 @@
                 @if($lokasi->image)
                     <img src="{{ asset('storage/' . $lokasi->image) }}" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
                 @else
-                    <img src="" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
+                    <img src="{{ $lokasi->image_url }}" alt="{{ $lokasi->nama_lokasi }}" class="w-full h-80 object-cover">
                 @endif
                 <div class="p-8">
                     <div class="flex justify-between items-start mb-4">
