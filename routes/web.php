@@ -55,6 +55,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/user/bayar', [PaymentController::class, 'bayar'])->name('user.bayar');
     Route::get('/user/qr-ambil', [PaymentController::class, 'qrAmbil'])->name('user.qr_ambil');
     Route::get('/api/payment/status/{trackId}', [PaymentController::class, 'checkStatus']);
+
+    // Onopay — cek saldo & proses pembayaran real dari saldo user
+    Route::get('/api/user/onopay-balance', [PaymentController::class, 'checkUserBalance']);
+    Route::post('/api/payment/process', [PaymentController::class, 'processPayment']);
 });
 
 // Admin Area Routes (Requires Authentication + Admin Role)

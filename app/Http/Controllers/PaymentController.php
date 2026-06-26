@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
@@ -20,76 +21,66 @@ class PaymentController extends Controller
         return view('user.pembayaran', compact('deposit'));
     }
 
-    // Memproses pembayaran dan API Onopay
+    // Memproses pembayaran dan API Onopay (legacy - redirect ke halaman QR)
     public function bayar(Request $request)
     {
-        // 1. Dapatkan data Deposit dari database berdasarkan ID yang dikirim
         $request->validate([
             'deposit_id' => 'required|exists:deposits,id'
         ]);
 
-        $deposit = \App\Models\Deposit::findOrFail($request->deposit_id);
-        $amount = $deposit->total_biaya > 0 ? $deposit->total_biaya : 35000; // Contoh jika belum ada logic kalkulasi
+        $deposit       = \App\Models\Deposit::findOrFail($request->deposit_id);
+        $amount        = $deposit->total_biaya > 0 ? $deposit->total_biaya : 35000;
         $transactionId = $deposit->tracking_code;
-        
-        // 2. Request ke API Onopay (Sesuai Screenshot Mockup)
-        $qrUrl = null;
+
+        $qrUrl        = null;
         $onopayQrCode = null;
-        
+
         try {
-            // Menggunakan HTTP Form Request sesuai screenshot ("Pilih Tipe Form")
             $response = Http::asForm()->post('https://onopay.web.id/api/v1/payment/qr/generate', [
-                'phone_number' => config('onopay.merchant_phone'), // Nomor merchant dari .env
-                'amount'       => $amount,
-                'merchant_code'=> 'MARTIP ' . $deposit->location->nama_lokasi ?? 'Pusat',
-                'description'  => 'Titip Barang ' . $transactionId,
-                'qr_mode'      => 'single_use'
+                'phone_number'  => config('onopay.merchant_phone'),
+                'amount'        => $amount,
+                'merchant_code' => 'MARTIP ' . $deposit->location->nama_lokasi ?? 'Pusat',
+                'description'   => 'Titip Barang ' . $transactionId,
+                'qr_mode'       => 'single_use'
             ]);
 
             if ($response->successful() && $response->json('success') == true) {
                 $qrUrl        = $response->json('data.qr_image');
                 $onopayQrCode = $response->json('data.qr_code');
-                
-                // Simpan QR ke Database (termasuk qr_code untuk webhook lookup)
+
                 $deposit->update([
                     'payment_qr_url'  => $qrUrl,
                     'payment_qr_code' => $onopayQrCode,
                 ]);
             } else {
-                // Log error response from API jika gagal
                 \Log::error('Onopay API Error: ' . $response->body());
             }
         } catch (\Exception $e) {
             \Log::error('Onopay Connection Error: ' . $e->getMessage());
         }
 
-        // 4. Sistem Fallback QR Code
-        // Jika API Onopay gagal diakses/unauthorized, buat QR dari API Publik agar UI tetap sama dengan mockup
         if (!$qrUrl) {
             $qrData = json_encode([
                 'tracking_code' => $transactionId,
-                'invoice_id' => $deposit->id
+                'invoice_id'    => $deposit->id
             ]);
             $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" . urlencode($qrData);
-            
-            $deposit->update([
-                'payment_qr_url' => $qrUrl
-            ]);
+
+            $deposit->update(['payment_qr_url' => $qrUrl]);
         }
 
-        // Redirect ke halaman sukses (QR Ambil Barang) dengan membawa URL QR dan ID Deposit
         return redirect()->route('user.qr_ambil')->with([
-            'qr_url' => $qrUrl,
+            'qr_url'        => $qrUrl,
             'transaction_id' => $transactionId,
-            'deposit_id' => $deposit->id
+            'deposit_id'    => $deposit->id
         ]);
     }
 
     public function qrAmbil(Request $request)
     {
         $depositId = session('deposit_id') ?? $request->query('deposit_id') ?? $request->query('id');
-        $deposit = null;
-        
+        $deposit   = null;
+
         if ($depositId) {
             $deposit = \App\Models\Deposit::with('location')->find($depositId);
         }
@@ -98,8 +89,7 @@ class PaymentController extends Controller
             return redirect()->route('user.dashboard')->with('error', 'Titipan tidak ditemukan.');
         }
 
-        // Jika tidak ada data flash session dari pembayaran, kasih default (untuk demo)
-        $qrUrl = session('qr_url', $deposit ? $deposit->payment_qr_url : "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=DEMO-QR");
+        $qrUrl         = session('qr_url', $deposit ? $deposit->payment_qr_url : "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=DEMO-QR");
         $transactionId = session('transaction_id', $deposit ? $deposit->tracking_code : 'INV-' . date('Ymd') . '-001');
 
         return view('user.qr_ambil', compact('qrUrl', 'transactionId', 'deposit'));
@@ -108,13 +98,13 @@ class PaymentController extends Controller
     public function checkStatus($trackId)
     {
         $deposit = \App\Models\Deposit::where('tracking_code', $trackId)->first();
-        
+
         if (!$deposit) {
             return response()->json(['status' => 'error', 'message' => 'Deposit not found'], 404);
         }
 
         return response()->json([
-            'status' => strtolower($deposit->payment_status) // misalnya 'paid' atau 'pending'
+            'status' => strtolower($deposit->payment_status)
         ]);
     }
 
@@ -132,36 +122,39 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Deposit not found'], 404);
         }
 
-        // Jika qr_code dikirim, teruskan ke Onopay API untuk mencatat transaksi real
-        // Jika tidak ada qr_code (mode fallback/simulasi dari web), langsung update status DB saja
         if ($request->qr_code) {
             $onopay = new \App\Services\OnopayService();
-            $payerPhone = $request->payer_phone ?? '089690260334';
 
-            $response = $onopay->pay($request->qr_code, $payerPhone);
+            // Gunakan nomor HP user yang terdaftar di website — tercatat di dashboard Onopay sebagai PAYER
+            $payerPhone = $request->payer_phone
+                       ?? Auth::user()?->phone
+                       ?? null;
 
-            if (isset($response['success']) && $response['success']) {
-                // Simpan ke database lokal untuk histori Onopay
-                try {
-                    \App\Models\OnopayTransaction::create([
-                        'transaction_id' => $response['data']['transaction_id'] ?? null,
-                        'amount'         => $deposit->total_biaya,
-                        'payer_phone'    => $payerPhone,
-                        'receiver_phone' => '08123456789',
-                        'status'         => 'success',
-                        'qr_code'        => $request->qr_code,
-                        'type'           => 'qr_payment'
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('Gagal simpan OnopayTransaction: ' . $e->getMessage());
-                }
+            if (!$payerPhone) {
+                \Log::warning('mobilePay: payer_phone kosong, transaksi Onopay dilewati');
             } else {
-                // Onopay gagal — log saja tapi tetap lanjut update DB lokal
-                \Log::warning('Onopay pay API gagal: ' . ($response['message'] ?? 'unknown'));
+                $response = $onopay->pay($request->qr_code, $payerPhone);
+
+                if (isset($response['success']) && $response['success']) {
+                    try {
+                        \App\Models\OnopayTransaction::create([
+                            'transaction_id' => $response['data']['transaction_id'] ?? null,
+                            'amount'         => $deposit->total_biaya,
+                            'payer_phone'    => $payerPhone,
+                            'receiver_phone' => config('onopay.merchant_phone'),
+                            'status'         => 'success',
+                            'qr_code'        => $request->qr_code,
+                            'type'           => 'qr_payment'
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Gagal simpan OnopayTransaction: ' . $e->getMessage());
+                    }
+                } else {
+                    \Log::warning('Onopay pay API gagal untuk user ' . $payerPhone . ': ' . ($response['message'] ?? 'unknown'));
+                }
             }
         }
 
-        // Update status deposit di database kita (selalu dijalankan)
         $deposit->update([
             'payment_status' => 'paid',
             'status'         => 'pending'
@@ -182,6 +175,131 @@ class PaymentController extends Controller
     }
 
     /**
+     * Cek saldo Onopay user yang sedang login.
+     * Menggunakan nomor HP yang didaftarkan saat daftar di MARTIP.
+     */
+    public function checkUserBalance(Request $request)
+    {
+        $user  = Auth::user();
+        $phone = $user->phone ?? null;
+
+        if (!$phone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor HP tidak ditemukan di profil kamu. Silakan update profil terlebih dahulu.'
+            ], 400);
+        }
+
+        $onopay   = new \App\Services\OnopayService();
+        $response = $onopay->checkBalance($phone);
+
+        // Sertakan nomor HP di response agar Vue bisa tampilkan
+        if (isset($response['success'])) {
+            $response['payer_phone'] = $phone;
+        }
+
+        return response()->json($response);
+    }
+
+    /**
+     * Proses pembayaran REAL dalam satu langkah:
+     * 1. Generate QR dari akun merchant Onopay (082213993917)
+     * 2. Langsung bayar menggunakan saldo Onopay milik user (nomor HP dari registrasi)
+     * → Saldo user terpotong & tercatat di dashboard Onopay Admin
+     */
+    public function processPayment(Request $request)
+    {
+        $request->validate(['deposit_id' => 'required|exists:deposits,id']);
+
+        $deposit    = \App\Models\Deposit::with('location')->findOrFail($request->deposit_id);
+        $user       = Auth::user();
+        $amount     = $deposit->total_biaya > 0 ? $deposit->total_biaya : 35000;
+        $payerPhone = $user->phone ?? null;
+
+        if (!$payerPhone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor HP tidak ditemukan. Silakan update profil terlebih dahulu.'
+            ], 400);
+        }
+
+        $onopay = new \App\Services\OnopayService();
+
+        // STEP 1: Generate QR Code dari akun merchant MARTIP
+        $qrResponse = $onopay->generateQR(
+            config('onopay.merchant_phone'),
+            $amount,
+            'MARTIP',
+            'Titip Barang ' . $deposit->tracking_code
+        );
+
+        if (!isset($qrResponse['success']) || !$qrResponse['success']) {
+            \Log::error('processPayment: gagal generate QR', $qrResponse);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat QR pembayaran: ' . ($qrResponse['message'] ?? 'Coba lagi.')
+            ], 400);
+        }
+
+        $qrCode  = $qrResponse['data']['qr_code']  ?? null;
+        $qrImage = $qrResponse['data']['qr_image'] ?? null;
+
+        $deposit->update([
+            'payment_qr_url'  => $qrImage,
+            'payment_qr_code' => $qrCode,
+        ]);
+
+        // STEP 2: Potong saldo Onopay nomor HP user yang daftar di MARTIP
+        // → Ini yang muncul di dashboard Onopay Admin sebagai transaksi user
+        $payResponse = $onopay->pay($qrCode, $payerPhone);
+
+        if (!isset($payResponse['success']) || !$payResponse['success']) {
+            \Log::warning('processPayment: pay gagal untuk ' . $payerPhone, $payResponse);
+            return response()->json([
+                'success' => false,
+                'message' => $payResponse['message']
+                    ?? 'Pembayaran gagal. Pastikan nomor ' . $payerPhone . ' terdaftar di Onopay dan saldo mencukupi.'
+            ], 400);
+        }
+
+        // STEP 3: Simpan histori transaksi
+        try {
+            \App\Models\OnopayTransaction::create([
+                'transaction_id' => $payResponse['data']['transaction_id'] ?? null,
+                'amount'         => $amount,
+                'payer_phone'    => $payerPhone,
+                'receiver_phone' => config('onopay.merchant_phone'),
+                'status'         => 'success',
+                'qr_code'        => $qrCode,
+                'type'           => 'qr_payment'
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('processPayment: gagal simpan transaksi: ' . $e->getMessage());
+        }
+
+        // STEP 4: Tandai deposit sebagai LUNAS
+        $deposit->update([
+            'payment_status' => 'paid',
+            'status'         => 'pending'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran berhasil! Saldo Onopay ' . $payerPhone . ' telah terpotong.',
+            'data'    => [
+                'transaction_id' => $payResponse['data']['transaction_id'] ?? null,
+                'receipt_no'     => $deposit->tracking_code,
+                'amount'         => $amount,
+                'payer_phone'    => $payerPhone,
+                'merchant'       => 'MARTIP ' . ($deposit->location->nama_lokasi ?? 'Pusat'),
+                'item_name'      => $deposit->nama_barang,
+                'date'           => now()->format('Y-m-d H:i:s'),
+                'status'         => 'LUNAS'
+            ]
+        ]);
+    }
+
+    /**
      * Menerima notifikasi pembayaran realtime dari Onopay (Webhook)
      */
     public function onopayWebhook(Request $request)
@@ -194,7 +312,6 @@ class PaymentController extends Controller
             return response()->json(['message' => 'ok']);
         }
 
-        // Cari deposit berdasarkan qr_code yang tersimpan
         $deposit = \App\Models\Deposit::where('payment_qr_code', $qrCode)->first();
 
         if ($deposit) {
@@ -202,7 +319,6 @@ class PaymentController extends Controller
             \Log::info('Onopay Webhook: deposit ' . $deposit->tracking_code . ' marked as paid');
         }
 
-        // Update OnopayTransaction jika ada
         \App\Models\OnopayTransaction::where('qr_code', $qrCode)->update(['status' => 'success']);
 
         return response()->json(['message' => 'ok']);
