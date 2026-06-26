@@ -80,7 +80,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600">{{ $user->email }}</td>
-                        <td class="px-6 py-4 text-gray-600">-</td>
+                        <td class="px-6 py-4 text-gray-600">{{ $user->phone ?? '-' }}</td>
                         <td class="px-6 py-4">
                             @if($user->role === 'admin')
                                 <span class="px-2 py-1 bg-purple-50 text-purple-600 text-xs font-semibold rounded">Admin</span>
