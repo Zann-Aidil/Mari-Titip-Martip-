@@ -150,10 +150,7 @@
 
                 <!-- Download Buttons -->
                 <div class="flex flex-wrap items-center gap-4">
-                    
-                    <!-- [UBAH LINK GOOGLE PLAY/DRIVE DI SINI] -->
-                    <!-- Ganti tanda pagar '#' pada href di bawah ini dengan link Google Drive / Play Store milikmu -->
-                    <a href="#" class="inline-flex items-center gap-3 bg-white hover:bg-gray-50 text-slate-900 font-bold py-3.5 px-8 rounded-2xl shadow-xl shadow-white/10 transition-all duration-300 transform hover:-translate-y-1">
+                    <a href="https://drive.usercontent.google.com/download?id=1ppHdZ47gU0u1maBFT1eTWAstZRQ9G6-c&export=download&authuser=1&confirm=t&uuid=bbd67fe0-3730-4704-9e4f-09b1f5f75213&at=ABswASZT4uubsl08QrnzflaFMa6Y:1782477366707" class="inline-flex items-center gap-3 bg-white hover:bg-gray-50 text-slate-900 font-bold py-3.5 px-8 rounded-2xl shadow-xl shadow-white/10 transition-all duration-300 transform hover:-translate-y-1">
                         <i class='bx bxl-play-store text-2xl text-green-600'></i>
                         <div class="text-left">
                             <span class="block text-[10px] text-gray-500 font-medium leading-none mb-1">DOWNLOAD DI</span>
