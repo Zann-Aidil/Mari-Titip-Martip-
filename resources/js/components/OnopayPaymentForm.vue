@@ -148,7 +148,7 @@ export default {
       this.loading = true;
       this.error = null;
 
-      // Automatically generate QR for the predefined amount and trackId
+      // Coba generate QR dari Onopay API
       const description = `Pembayaran untuk ID ${this.trackId}`;
       const result = await OnopayService.generateQR(
         this.systemReceiverPhone,
@@ -158,15 +158,24 @@ export default {
       );
 
       if (result.success) {
+        // Sukses dari Onopay API — tampilkan QR asli
         this.qrData = result.data;
-        this.step = 2; // Show Modal
-        this.startPolling(); // Mulai polling status realtime
       } else {
-        this.error = result.message || 'Gagal menyiapkan pembayaran OnoPay.';
+        // FALLBACK: API Onopay gagal/tidak bisa diakses dari hosting
+        // Tetap buka modal dengan QR fallback agar user bisa konfirmasi pembayaran
+        console.warn('[Onopay] API gagal, menggunakan mode fallback:', result.message);
+        this.qrData = {
+          qr_image: `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent('MARTIP:' + this.trackId + ':' + this.amount)}`,
+          qr_code: null // Tidak ada kode Onopay, akan diproses sebagai fallback
+        };
       }
 
+      // Selalu buka modal (step 2) — baik API berhasil maupun fallback
+      this.step = 2;
+      this.startPolling();
       this.loading = false;
     },
+
 
     startPolling() {
       // Clear any existing interval

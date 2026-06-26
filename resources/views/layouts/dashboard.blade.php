@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard - MARTIP')</title>
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
 
@@ -18,7 +19,7 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <!-- Styles (Tailwind via Vite) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
 
     <style>
         body { font-family: 'Poppins', sans-serif; }
@@ -139,5 +140,8 @@
             offset: 50,
         });
     </script>
+
+    <!-- Vue + JS App (di-load setelah DOM siap agar Vue bisa mount #app) -->
+    @vite(['resources/js/app.js'])
 </body>
 </html>
