@@ -114,11 +114,11 @@
         <h4 class="text-sm font-bold text-gray-900 mb-8 uppercase tracking-wider">Lokasi Titip Terpercaya</h4>
         <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition duration-500">
             <!-- Dummy Logos replacing the specific ones in mockup -->
-            <div class="flex items-center gap-2"><i class='bx bx-coffee text-3xl text-yellow-800'></i><span class="font-bold text-xl text-gray-800">Kedai Joeli</span></div>
-            <div class="flex items-center gap-2"><i class='bx bx-water text-3xl text-blue-500'></i><span class="font-bold text-xl text-gray-800">LaundryKuy</span></div>
-            <div class="flex items-center gap-2"><i class='bx bx-home-heart text-3xl text-pink-500'></i><span class="font-bold text-xl text-gray-800">Indekos Putri</span></div>
-            <div class="flex items-center gap-2"><i class='bx bx-store text-3xl text-green-700'></i><span class="font-bold text-xl text-gray-800">Warung Pak Gede</span></div>
-            <div class="flex items-center gap-2"><i class='bx bx-train text-3xl text-gray-600'></i><span class="font-bold text-xl text-gray-800">Stasiun Mini</span></div>
+            <div class="flex items-center gap-2"><i class='bx bx-coffee text-3xl text-yellow-800'></i><span class="font-bold text-xl text-gray-800">Kopi Masa Muda Point</span></div>
+            <div class="flex items-center gap-2"><i class='bx bx-water text-3xl text-blue-500'></i><span class="font-bold text-xl text-gray-800">Laundry Unimed</span></div>
+            <div class="flex items-center gap-2"><i class='bx bx-home-heart text-3xl text-pink-500'></i><span class="font-bold text-xl text-gray-800">In The Kos</span></div>
+            <div class="flex items-center gap-2"><i class='bx bx-store text-3xl text-green-700'></i><span class="font-bold text-xl text-gray-800">Warung Buk Inun</span></div>
+            <div class="flex items-center gap-2"><i class='bx bx-train text-3xl text-gray-600'></i><span class="font-bold text-xl text-gray-800">Stasiun KAI Medan</span></div>
         </div>
     </div>
 </section>
@@ -223,7 +223,7 @@
     }
 </style>
 
-<!-- Live Search Script -->
+<!-- AJAX -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById('searchInput');
