@@ -45,7 +45,7 @@
                     <input type="email" name="email" value="{{ Auth::user()->email }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 outline-none text-sm bg-gray-50" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Nomor HP (OnoPay)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nomor HP</label>
                     <input type="text" name="phone" value="{{ Auth::user()->phone }}" placeholder="Contoh: 081234567890" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 outline-none text-sm" required>
                 </div>
             </div>

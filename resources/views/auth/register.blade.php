@@ -49,7 +49,7 @@
 
                         <!-- Phone -->
                         <div class="mb-5">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon (OnoPay)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
                                     <i class='bx bx-phone'></i>
