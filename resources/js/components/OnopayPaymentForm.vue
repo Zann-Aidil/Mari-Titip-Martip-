@@ -130,7 +130,11 @@ export default {
     },
     userPhone: {
       type: String,
-      default: '089690260334'
+      default: ''
+    },
+    merchantPhone: {
+      type: String,
+      default: '082213993917'
     }
   },
   data() {
@@ -138,7 +142,6 @@ export default {
       step: 1, // 1: Button, 2: Modal QR, 4: Success
       loading: false,
       error: null,
-      systemReceiverPhone: '08123456789', // Dummy system receiver
       qrData: {},
       pollingInterval: null
     };
@@ -148,10 +151,10 @@ export default {
       this.loading = true;
       this.error = null;
 
-      // Coba generate QR dari Onopay API
+      // Generate QR via Onopay API menggunakan nomor merchant dari config
       const description = `Pembayaran untuk ID ${this.trackId}`;
       const result = await OnopayService.generateQR(
-        this.systemReceiverPhone,
+        this.merchantPhone,
         this.amount,
         'MARTIP',
         description

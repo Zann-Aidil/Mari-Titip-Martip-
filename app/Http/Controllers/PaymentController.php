@@ -38,22 +38,22 @@ class PaymentController extends Controller
         
         try {
             // Menggunakan HTTP Form Request sesuai screenshot ("Pilih Tipe Form")
-            $response = Http::asForm()->post('http://onopay.web.id/api/v1/payment/qr/generate', [
-                'phone_number' => '089690260334', // Nomor HP user dari Auth::user() jika ada
-                'amount' => $amount,
-                'merchant_code' => 'MARTIP ' . $deposit->location->nama_lokasi ?? 'Pusat',
-                'description' => 'Titip Barang ' . $transactionId,
-                'qr_mode' => 'single_use'
+            $response = Http::asForm()->post('https://onopay.web.id/api/v1/payment/qr/generate', [
+                'phone_number' => config('onopay.merchant_phone'), // Nomor merchant dari .env
+                'amount'       => $amount,
+                'merchant_code'=> 'MARTIP ' . $deposit->location->nama_lokasi ?? 'Pusat',
+                'description'  => 'Titip Barang ' . $transactionId,
+                'qr_mode'      => 'single_use'
             ]);
 
             if ($response->successful() && $response->json('success') == true) {
-                $qrUrl = $response->json('data.qr_image');
+                $qrUrl        = $response->json('data.qr_image');
                 $onopayQrCode = $response->json('data.qr_code');
                 
-                // 3. Simpan link QR ke Database
+                // Simpan QR ke Database (termasuk qr_code untuk webhook lookup)
                 $deposit->update([
-                    'payment_qr_url' => $qrUrl,
-                    // Opsional: Jika kita buat kolom payment_reference, kita bisa simpan $onopayQrCode
+                    'payment_qr_url'  => $qrUrl,
+                    'payment_qr_code' => $onopayQrCode,
                 ]);
             } else {
                 // Log error response from API jika gagal
@@ -179,5 +179,32 @@ class PaymentController extends Controller
                 'status'     => 'LUNAS'
             ]
         ]);
+    }
+
+    /**
+     * Menerima notifikasi pembayaran realtime dari Onopay (Webhook)
+     */
+    public function onopayWebhook(Request $request)
+    {
+        \Log::info('Onopay Webhook received', $request->all());
+
+        $qrCode = $request->input('qr_code');
+
+        if (!$qrCode) {
+            return response()->json(['message' => 'ok']);
+        }
+
+        // Cari deposit berdasarkan qr_code yang tersimpan
+        $deposit = \App\Models\Deposit::where('payment_qr_code', $qrCode)->first();
+
+        if ($deposit) {
+            $deposit->update(['payment_status' => 'paid']);
+            \Log::info('Onopay Webhook: deposit ' . $deposit->tracking_code . ' marked as paid');
+        }
+
+        // Update OnopayTransaction jika ada
+        \App\Models\OnopayTransaction::where('qr_code', $qrCode)->update(['status' => 'success']);
+
+        return response()->json(['message' => 'ok']);
     }
 }

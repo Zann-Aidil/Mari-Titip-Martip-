@@ -17,6 +17,7 @@ class Deposit extends Model
         'total_biaya',
         'payment_status',
         'payment_qr_url',
+        'payment_qr_code',
         'tracking_code',
         'status',
         'waktu_titip',

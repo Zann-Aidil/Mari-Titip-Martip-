@@ -29,6 +29,7 @@ Route::get('/kontak', [PublicController::class, 'kontak'])->name('kontak');
 // Public API Routes
 Route::get('/api/search-lokasi', [PublicController::class, 'searchApi'])->name('api.search.lokasi');
 Route::post('/api/mobile/pay', [PaymentController::class, 'mobilePay'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/api/onopay/webhook', [PaymentController::class, 'onopayWebhook'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Auth Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
