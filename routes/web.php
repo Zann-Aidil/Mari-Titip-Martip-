@@ -56,7 +56,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/qr-ambil', [PaymentController::class, 'qrAmbil'])->name('user.qr_ambil');
     Route::get('/api/payment/status/{trackId}', [PaymentController::class, 'checkStatus']);
 
-    // Onopay — cek saldo & proses pembayaran real dari saldo user
+    // Onopay — generate QR, cek saldo & proses pembayaran real dari saldo user
+    Route::post('/api/payment/generate-qr', [PaymentController::class, 'generateQrApi']);
     Route::get('/api/user/onopay-balance', [PaymentController::class, 'checkUserBalance']);
     Route::post('/api/payment/process', [PaymentController::class, 'processPayment']);
 });

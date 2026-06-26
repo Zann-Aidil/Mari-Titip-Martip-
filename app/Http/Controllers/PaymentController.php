@@ -300,6 +300,50 @@ class PaymentController extends Controller
     }
 
     /**
+     * Generate QR Code via backend (proxy ke Onopay) — dipanggil dari Vue
+     * Menghindari CORS issue jika dipanggil langsung dari browser
+     */
+    public function generateQrApi(Request $request)
+    {
+        $request->validate(['deposit_id' => 'required|exists:deposits,id']);
+
+        $deposit = \App\Models\Deposit::with('location')->findOrFail($request->deposit_id);
+        $amount  = $deposit->total_biaya > 0 ? $deposit->total_biaya : 35000;
+
+        $onopay   = new \App\Services\OnopayService();
+        $response = $onopay->generateQR(
+            config('onopay.merchant_phone'),
+            $amount,
+            'MARTIP',
+            'Titip Barang ' . $deposit->tracking_code
+        );
+
+        if (isset($response['success']) && $response['success']) {
+            $deposit->update([
+                'payment_qr_url'  => $response['data']['qr_image'] ?? null,
+                'payment_qr_code' => $response['data']['qr_code']  ?? null,
+            ]);
+
+            return response()->json([
+                'success'  => true,
+                'qr_image' => $response['data']['qr_image'] ?? null,
+                'qr_code'  => $response['data']['qr_code']  ?? null,
+            ]);
+        }
+
+        // Fallback: Jika Onopay API tidak tersedia, pakai QR publik agar UI tetap berjalan
+        $qrData     = urlencode(json_encode(['tracking_code' => $deposit->tracking_code, 'id' => $deposit->id]));
+        $fallbackQr = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={$qrData}";
+
+        return response()->json([
+            'success'  => false,
+            'qr_image' => $fallbackQr,
+            'qr_code'  => null,
+            'message'  => $response['message'] ?? 'Onopay tidak tersedia, QR fallback aktif'
+        ]);
+    }
+
+    /**
      * Menerima notifikasi pembayaran realtime dari Onopay (Webhook)
      */
     public function onopayWebhook(Request $request)
